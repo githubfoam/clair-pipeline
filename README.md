@@ -6,6 +6,8 @@
 
 https://github.com/quay/clair
 
+Damn Vulnerable Web Application (DVWA)
+http://www.dvwa.co.uk/
 Open Container Initiative
 https://github.com/opencontainers/image-spec/blob/master/spec.md
 Docker Image Specification v1.2.0
