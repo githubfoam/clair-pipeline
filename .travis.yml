@@ -1,0 +1,95 @@
+---
+sudo: required
+dist: bionic
+notifications:
+  slack:
+    on_failure: always
+matrix:
+  fast_finish: true
+  include:
+
+   
+
+    - name: "deploy clairctl w Damn Vulnerable Web Application on bionic amd64"
+      dist: bionic
+      arch: amd64
+      sudo: false
+      language: python
+      # python: 3.7
+      services:
+        - docker 
+      before_install:
+        - pip3 install virtualenv
+        - virtualenv -p $(which python3) ~venvpy3
+        - source ~venvpy3/bin/activate
+        - pip install -r requirements.txt
+      script:
+        - mkdir -p clair/docker-compose-data/clair-config
+        - wget https://raw.githubusercontent.com/jgsqware/clairctl/master/docker-compose.yml --directory-prefix=clair/docker-compose-data/
+        - wget https://raw.github.com/jgsqware/clairctl/master/docker-compose-data/clair-config/config.yml --directory-prefix=clair/clair-config/
+        - cd clair/docker-compose-data
+        -  docker-compose up &
+        - docker pull infoslack/dvwa
+        - docker-compose exec clairctl clairctl analyze -l infoslack/dvwa
+        - docker-compose exec clairctl clairctl report -l infoslack/dvwa
+      after_success:
+        - deactivate
+
+    - name: "deploy clair-scanner wo snaps on bionic amd64"
+      dist: bionic
+      arch: amd64
+      sudo: false
+      language: python
+      # python: 3.7
+      services:
+        - docker 
+      before_install:
+        - pip3 install virtualenv
+        - virtualenv -p $(which python3) ~venvpy3
+        - source ~venvpy3/bin/activate
+        - pip install -r requirements.txt
+      script:
+      # Clone the repo
+        - git clone git@github.com:arminc/clair-scanner.git
+        # Build and install 
+        - make installLocal
+        - ./clair-scanner -h
+        - docker run -p 5432:5432 -d --name db arminc/clair-db:2017-09-18
+        - docker run -p 6060:6060 --link db:postgres -d --name clair arminc/clair-local-scan:v2.0.6
+        - clair-scanner --ip 127.0.0.1 alpine:3.5
+      after_success:
+        - deactivate
+
+
+    - name: "deploy minikube kubectl helm latest wo snaps on bionic amd64"
+      dist: bionic
+      arch: amd64
+      language: python
+      # python: 3.7
+      before_install:
+        - pip3 install virtualenv
+        - virtualenv -p $(which python3) ~venvpy3
+        - source ~venvpy3/bin/activate
+        - pip install -r requirements.txt
+      script:
+        - sudo make deploy-minikube-kubectl-helm-latest
+        - sudo make deploy-clair
+      after_success:
+        - deactivate
+
+    - name: "scan images w clair wo snaps on bionic amd64"
+      dist: bionic
+      arch: amd64
+      language: python
+      # python: 3.7
+      before_install:
+        - pip3 install virtualenv
+        - virtualenv -p $(which python3) ~venvpy3
+        - source ~venvpy3/bin/activate
+        - pip install -r requirements.txt
+      script:
+        - sudo make deploy-minikube-latest
+        - sudo make deploy-clair
+      after_success:
+        - deactivate
+ 
