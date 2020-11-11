@@ -8,7 +8,33 @@ matrix:
   fast_finish: true
   include:
 
-   
+# https://github.com/jgsqware/clairctl
+    - name: "deploy clairctl w Damn Vulnerable Web Application on bionic amd64"
+      dist: bionic
+      arch: amd64
+      sudo: false
+      language: python
+      # python: 3.7
+      services:
+        - docker 
+      before_install:
+        - pip3 install virtualenv
+        - virtualenv -p $(which python3) ~venvpy3
+        - source ~venvpy3/bin/activate
+        - pip install -r requirements.txt
+      script:
+        # Master branch version
+        - curl -L https://raw.githubusercontent.com/jgsqware/clairctl/master/install.sh | sh
+        # check out the clairctl repo and start the complete postgres/clair/clairctl stack
+        - git clone git@github.com:jgsqware/clairctl.git $GOPATH/src/github.com/jgsqware/clairctl
+        - cd $GOPATH/src/github.com/jgsqware/clairctl
+        - docker-compose up -d postgres
+        # make sure clairctl can reach clair
+        - docker-compose exec clairctl clairctl health
+        - docker pull infoslack/dvwa
+      after_success:
+        - deactivate
+
 
     - name: "deploy clairctl w Damn Vulnerable Web Application on bionic amd64"
       dist: bionic
@@ -29,8 +55,12 @@ matrix:
         - wget https://raw.github.com/jgsqware/clairctl/master/docker-compose-data/clair-config/config.yml --directory-prefix=clair/clair-config/
         - cd clair/docker-compose-data
         -  docker-compose up &
+        - sleep 1200 #20 mins
+        - docker-compose ps
         - docker pull infoslack/dvwa
-        - docker-compose exec clairctl clairctl analyze --local infoslack/dvwa
+        # ERROR: No container found for clairctl_1
+        # - docker-compose exec clairctl clairctl analyze --local infoslack/dvwa
+        - docker-compose exec clairctl clairctl analyze -l infoslack/dvwa
       after_success:
         - deactivate
 
