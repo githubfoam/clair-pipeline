@@ -1,6 +1,6 @@
 # clair-pipeline
 
-[![Build Status](https://travis-ci.com/githubfoam/clair-pipeline.svg?branch=dev)](https://travis-ci.com/githubfoam/clair-pipeline)  
+[![Build Status](https://travis-ci.com/githubfoam/clair-pipeline.svg?branch=master)](https://travis-ci.com/githubfoam/clair-pipeline)  
 
 ~~~~
 
